@@ -4,13 +4,12 @@
  * - If you don’t use backend, set USE_PROXY=false and set BASE_URL directly to your API origin
  */
 
-const USE_PROXY = true;
+const USE_PROXY = false;
 
-// If USE_PROXY=true => calls backend endpoints: /api/home, /api/search?q=, /api/detail/:id, /api/video/:id
+// If USE_PROXY=true => calls backend endpoints: /api/home, /api/search, /api/detail/:id, /api/video/:id
 const BACKEND_PROXY = "http://localhost:8787";
 
-// If USE_PROXY=false => calls direct API: e.g. https://your-api.com/api/v1
-const USE_PROXY = false;
+// If USE_PROXY=false => calls direct API: e.g. https://dramabos.asia/api/melolo
 const BASE_URL = "https://dramabos.asia/api/melolo";
 
 // API paths (Melolo-like)
@@ -247,30 +246,37 @@ function closePlayer() {
 // -------- API Actions --------
 async function loadHome(reset = true) {
   if (reset) {
+    state.mode = "home";
     state.page = 1;
-    grid.innerHTML = "";
+    state.items = [];
+    gridTitle.textContent = "Trending / Home";
   }
 
   const offset = (state.page - 1) * 20;
-  const url = `${BASE_URL}${PATHS.home}?offset=${offset}&count=20`;
+  const url = apiUrl(`${PATHS.home}?offset=${offset}&count=20`);
 
   const raw = await getJSON(url);
   const items = normalizeList(raw);
 
+  state.items = reset ? items : state.items.concat(items);
   renderGrid(items, !reset);
-}
+      }
 async function search(query, reset = true) {
   if (reset) {
+    state.mode = "search";
     state.page = 1;
-    grid.innerHTML = "";
+    state.query = query;
+    state.items = [];
+    gridTitle.textContent = `Search: “${query}”`;
   }
 
   const offset = (state.page - 1) * 20;
-  const url = `${BASE_URL}${PATHS.search}?q=${encodeURIComponent(query)}&offset=${offset}&count=20`;
+  const url = apiUrl(`${PATHS.search}?q=${encodeURIComponent(query)}&offset=${offset}&count=20`);
 
   const raw = await getJSON(url);
   const items = normalizeList(raw);
 
+  state.items = reset ? items : state.items.concat(items);
   renderGrid(items, !reset);
 }
 
