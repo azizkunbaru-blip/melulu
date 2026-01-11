@@ -10,14 +10,15 @@ const USE_PROXY = true;
 const BACKEND_PROXY = "http://localhost:8787";
 
 // If USE_PROXY=false => calls direct API: e.g. https://your-api.com/api/v1
-const BASE_URL = "https://YOUR_API_ORIGIN_HERE"; // only used when USE_PROXY=false
+const USE_PROXY = false;
+const BASE_URL = "https://dramabos.asia/api/melolo";
 
 // API paths (Melolo-like)
 const PATHS = {
   home: "/api/v1/home",
   search: "/api/v1/search",
-  detail: "/api/v1/detail", // + /:id
-  video: "/api/v1/video",   // + /:id
+  detail: "/api/v1/detail",
+  video: "/api/v1/video",
 };
 
 // UI Elements
@@ -106,41 +107,31 @@ async function getJSON(url) {
  * EDIT THIS FUNCTION to match your real API response keys.
  */
 function normalizeList(raw) {
-  // Accept raw in various styles:
-  // { data: [ ... ] } or { list: [ ... ] } or [ ... ]
-  const arr = Array.isArray(raw) ? raw : (raw?.data || raw?.list || raw?.items || []);
+  const arr = raw?.data || [];
   return arr.map((it) => ({
-    id: String(it.id ?? it.video_id ?? it.mid ?? it._id ?? ""),
-    title: it.title ?? it.name ?? it.vod_name ?? "Untitled",
-    poster: it.poster ?? it.cover ?? it.pic ?? it.vod_pic ?? "",
-    tag: it.tag ?? it.category ?? it.type ?? it.vod_class ?? "—",
-    views: it.views ?? it.play ?? it.hot ?? it.vod_hits ?? 0,
-    year: it.year ?? it.release_year ?? it.vod_year ?? "",
-    duration: it.duration ?? it.len ?? it.vod_duration ?? "",
-  })).filter(x => x.id);
+    id: String(it.id),
+    title: it.name,
+    poster: it.cover,
+    tag: it.author ? `by ${it.author}` : "Drama",
+    episodes: it.episodes,
+    intro: it.intro
+  }));
 }
-
 /**
  * Normalize detail:
  * detail: { id, title, poster, tags[], rating, desc, year, views }
  */
 function normalizeDetail(raw) {
-  const d = raw?.data ?? raw?.detail ?? raw ?? {};
-  const tags =
-    Array.isArray(d.tags) ? d.tags :
-    typeof d.tags === "string" ? d.tags.split(/[,，]/).map(s => s.trim()).filter(Boolean) :
-    typeof d.vod_class === "string" ? d.vod_class.split(/[,，]/).map(s => s.trim()).filter(Boolean) :
-    [];
-
+  const d = raw?.data || {};
   return {
-    id: String(d.id ?? d.video_id ?? d.mid ?? d._id ?? ""),
-    title: d.title ?? d.name ?? d.vod_name ?? "Untitled",
-    poster: d.poster ?? d.cover ?? d.pic ?? d.vod_pic ?? "",
-    tags,
-    rating: d.rating ?? d.score ?? d.vod_score ?? "—",
-    desc: d.desc ?? d.description ?? d.vod_content ?? "—",
-    year: d.year ?? d.vod_year ?? "",
-    views: d.views ?? d.vod_hits ?? "",
+    id: String(d.id),
+    title: d.name,
+    poster: d.cover,
+    tags: d.author ? [d.author] : [],
+    rating: d.episodes ? `${d.episodes} eps` : "-",
+    desc: d.intro || "-",
+    year: "",
+    views: ""
   };
 }
 
@@ -149,8 +140,8 @@ function normalizeDetail(raw) {
  * { url: "https://..." } or { data: { url } } etc
  */
 function normalizeVideo(raw) {
-  const d = raw?.data ?? raw ?? {};
-  return d.url ?? d.play_url ?? d.m3u8 ?? d.mp4 ?? "";
+  const d = raw?.data || {};
+  return d.url || "";
 }
 
 function escapeHTML(s) {
@@ -256,31 +247,32 @@ function closePlayer() {
 // -------- API Actions --------
 async function loadHome(reset = true) {
   if (reset) {
-    state.mode = "home";
     state.page = 1;
-    state.items = [];
-    gridTitle.textContent = "Trending / Home";
+    grid.innerHTML = "";
   }
 
-  const url = USE_PROXY
-    ? apiUrl(`/api/home?page=${state.page}`)
-    : apiUrl(`${PATHS.home}?page=${state.page}`);
+  const offset = (state.page - 1) * 20;
+  const url = `${BASE_URL}${PATHS.home}?offset=${offset}&count=20`;
 
   const raw = await getJSON(url);
   const items = normalizeList(raw);
 
-  state.items = reset ? items : state.items.concat(items);
   renderGrid(items, !reset);
 }
-
 async function search(query, reset = true) {
   if (reset) {
-    state.mode = "search";
     state.page = 1;
-    state.query = query;
-    state.items = [];
-    gridTitle.textContent = `Search: “${query}”`;
+    grid.innerHTML = "";
   }
+
+  const offset = (state.page - 1) * 20;
+  const url = `${BASE_URL}${PATHS.search}?q=${encodeURIComponent(query)}&offset=${offset}&count=20`;
+
+  const raw = await getJSON(url);
+  const items = normalizeList(raw);
+
+  renderGrid(items, !reset);
+}
 
   const url = USE_PROXY
     ? apiUrl(`/api/search?q=${encodeURIComponent(query)}&page=${state.page}`)
