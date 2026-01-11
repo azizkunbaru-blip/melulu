@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MELULU — Short Film</title>
+  <meta name="theme-color" content="#0b1220" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <div class="bg-glow"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="dot"></div>
+      <div class="brand-text">
+        <div class="brand-name">MELULU</div>
+        <div class="brand-sub">Short China Film • Clean UI</div>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <button class="ghost" id="btnHome" title="Home">
+        <span class="icon">⌂</span><span class="hide-sm">Home</span>
+      </button>
+
+      <button class="ghost" id="btnRefresh" title="Refresh">
+        <span class="icon">↻</span><span class="hide-sm">Refresh</span>
+      </button>
+
+      <a class="ghost" href="./../api-reference/openapi.yaml" target="_blank" rel="noreferrer" title="API Reference">
+        <span class="icon">⧉</span><span class="hide-sm">API</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-left">
+        <h1>Nonton short film dengan gaya <span class="accent">Melolo</span>.</h1>
+        <p class="muted">
+          Search cepat, kartu film minimalis, detail + player fullscreen.
+          API kamu tinggal colok lewat <span class="code">BASE_URL</span>.
+        </p>
+
+        <div class="searchbar">
+          <div class="search-icon">⌕</div>
+          <input id="q" type="search" placeholder="Cari judul, actor, tag… (Enter)" autocomplete="off" />
+          <button id="btnSearch" class="primary">Search</button>
+        </div>
+
+        <div class="chips" id="chips">
+          <!-- chips injected -->
+        </div>
+
+        <div class="status-row">
+          <div class="pill" id="pillStatus">Ready</div>
+          <div class="muted small" id="metaInfo">—</div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="glass card preview">
+          <div class="preview-top">
+            <div class="live-dot"></div>
+            <div class="preview-title">Now Playing</div>
+          </div>
+          <div class="preview-body">
+            <div class="skeleton poster"></div>
+            <div class="preview-lines">
+              <div class="skeleton line w90"></div>
+              <div class="skeleton line w70"></div>
+              <div class="skeleton line w55"></div>
+            </div>
+          </div>
+          <div class="preview-foot">
+            <div class="skeleton btn w35"></div>
+            <div class="skeleton btn w35"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid-wrap">
+      <div class="section-title">
+        <h2 id="gridTitle">Trending / Home</h2>
+        <div class="muted small" id="gridSub">Klik kartu untuk detail & play.</div>
+      </div>
+
+      <div class="grid" id="grid"></div>
+
+      <div class="loadmore-row">
+        <button class="ghost" id="btnLoadMore">Load more</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Detail Drawer -->
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+
+    <div class="drawer-panel">
+      <div class="drawer-head">
+        <div class="drawer-title">
+          <div class="badge">DETAIL</div>
+          <div>
+            <div class="h3" id="dTitle">—</div>
+            <div class="muted small" id="dMeta">—</div>
+          </div>
+        </div>
+
+        <button class="ghost" id="btnCloseDrawer" title="Close">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="poster-wrap">
+          <img id="dPoster" alt="Poster" />
+          <div class="poster-shade"></div>
+        </div>
+
+        <div class="detail">
+          <div class="detail-row">
+            <div class="label">Rating</div>
+            <div class="value" id="dRating">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="label">Tags</div>
+            <div class="value" id="dTags">—</div>
+          </div>
+          <div class="detail-row">
+            <div class="label">Sinopsis</div>
+            <div class="value muted" id="dDesc">—</div>
+          </div>
+
+          <div class="actions">
+            <button class="primary" id="btnPlay">▶ Play</button>
+            <button class="ghost" id="btnCopyLink">⧉ Copy link</button>
+          </div>
+
+          <div class="muted small">
+            Tips: kalau videonya HLS, browser butuh <span class="code">hls.js</span> (sudah disiapkan fallback).
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Player Modal -->
+  <div class="modal" id="player" aria-hidden="true">
+    <div class="modal-overlay" id="playerOverlay"></div>
+    <div class="modal-panel">
+      <div class="modal-head">
+        <div class="modal-title">
+          <div class="live-dot"></div>
+          <div>
+            <div class="h3" id="pTitle">Playing</div>
+            <div class="muted small" id="pMeta">—</div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="ghost" id="btnTheater" title="Theater">▢</button>
+          <button class="ghost" id="btnClosePlayer" title="Close">✕</button>
+        </div>
+      </div>
+
+      <div class="video-wrap" id="videoWrap">
+        <video id="video" controls playsinline preload="metadata"></video>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="muted small">
+      © <span id="year"></span> MELULU • UI by you • API by you
+    </div>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
